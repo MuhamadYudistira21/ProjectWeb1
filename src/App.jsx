@@ -1,9 +1,65 @@
-import React, { useState } from "react";
-import { Mountain, Star, ArrowRight, ChevronLeft, CheckCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Mountain,
+  ArrowRight,
+  MapPin,
+  Users,
+  Calendar,
+  CheckCircle,
+  Facebook,
+  Instagram,
+  Twitter,
+} from "lucide-react";
 
-const App = () => {
-  const [page, setPage] = useState("home");
+const mountainsData = [
+  {
+    id: 1,
+    name: "Gunung Bromo",
+    location: "Jawa Timur",
+    price: 350000,
+    image: "/bromo.jpg",
+  },
+  {
+    id: 2,
+    name: "Gunung Rinjani",
+    location: "NTB",
+    price: 550000,
+    image: "/rinjani.jpg",
+  },
+  {
+    id: 3,
+    name: "Gunung Semeru",
+    location: "Jawa Timur",
+    price: 450000,
+    image: "/semeru.jpg",
+  },
+  {
+    id: 4,
+    name: "Gunung Prau",
+    location: "Jawa Tengah",
+    price: 250000,
+    image: "/prau.jpg",
+  },
+  {
+    id: 5,
+    name: "Gunung Merbabu",
+    location: "Jawa Tengah",
+    price: 300000,
+    image: "/merbabu.jpg",
+  },
+  {
+    id: 6,
+    name: "Gunung Ijen",
+    location: "Jawa Timur",
+    price: 200000,
+    image: "/ijen.jpg",
+  },
+];
+
+export default function App() {
+  const [activeMenu, setActiveMenu] = useState("home");
   const [selectedMountain, setSelectedMountain] = useState(null);
+  const [bookings, setBookings] = useState([]);
 
   const [bookingData, setBookingData] = useState({
     name: "",
@@ -13,26 +69,32 @@ const App = () => {
     people: 1,
   });
 
-  const [bookings, setBookings] = useState([]);
+  /* ===== NAVBAR ACTIVE SCROLL ===== */
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ["home", "mountains", "contact"];
+      sections.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 100 && rect.bottom >= 100) {
+            setActiveMenu(id);
+          }
+        }
+      });
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  /* ================= DATA GUNUNG (TETAP LENGKAP) ================= */
-  const mountains = [
-    { id: 1, name: "Gunung Rinjani", price: 250000, rating: 4.8, image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800" },
-    { id: 2, name: "Gunung Semeru", price: 200000, rating: 4.9, image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800" },
-    { id: 3, name: "Gunung Bromo", price: 150000, rating: 4.7, image: "/bromo.jpg" },
-    { id: 4, name: "Gunung Merbabu", price: 100000, rating: 4.6, image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800" },
-    { id: 5, name: "Gunung Kerinci", price: 300000, rating: 4.8, image: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=800" },
-    { id: 6, name: "Gunung Prau", price: 75000, rating: 4.5, image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800" },
-  ];
-
-  /* ================= HANDLE INPUT ================= */
-  const handleChange = (e) => {
-    setBookingData({ ...bookingData, [e.target.name]: e.target.value });
-  };
-
-  /* ================= SUBMIT BOOKING ================= */
+  /* ===== BOOKING ===== */
   const handleBooking = () => {
-    if (!bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.date) {
+    if (
+      !bookingData.name ||
+      !bookingData.email ||
+      !bookingData.phone ||
+      !bookingData.date
+    ) {
       alert("Lengkapi semua data!");
       return;
     }
@@ -40,129 +102,251 @@ const App = () => {
     const newBooking = {
       id: Date.now(),
       mountain: selectedMountain.name,
+      total:
+        selectedMountain.price * bookingData.people,
       ...bookingData,
-      total: selectedMountain.price * bookingData.people,
       status: "MENUNGGU_PEMBAYARAN",
-      va: "BCA 880812345678",
+      va: "BCA 880812341234",
     };
 
     setBookings([...bookings, newBooking]);
-    setPage("bookings");
+    setSelectedMountain(null);
+    setBookingData({
+      name: "",
+      email: "",
+      phone: "",
+      date: "",
+      people: 1,
+    });
   };
-
-  /* ================= KONFIRMASI PEMBAYARAN ================= */
-  const confirmPayment = (id) => {
-    const updated = bookings.map((b) =>
-      b.id === id ? { ...b, status: "LUNAS" } : b
-    );
-    setBookings(updated);
-  };
-
-  /* ================= HOME ================= */
-  const Home = () => (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold text-center mb-10">Booking Pendakian Gunung</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {mountains.map((m) => (
-          <div
-            key={m.id}
-            onClick={() => {
-              setSelectedMountain(m);
-              setPage("detail");
-            }}
-            className="bg-white rounded-xl shadow hover:shadow-xl cursor-pointer"
-          >
-            <img src={m.image} className="h-48 w-full object-cover rounded-t-xl" />
-            <div className="p-4">
-              <h3 className="font-bold">{m.name}</h3>
-              <div className="flex items-center text-yellow-500 gap-1">
-                <Star size={16} /> {m.rating}
-              </div>
-              <p className="text-green-600 font-bold mt-2">
-                Rp {m.price.toLocaleString("id-ID")}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  /* ================= DETAIL ================= */
-  const Detail = () => (
-    <div className="max-w-md mx-auto p-6">
-      <button onClick={() => setPage("home")} className="flex items-center gap-2 text-green-600 mb-4">
-        <ChevronLeft /> Kembali
-      </button>
-
-      <h2 className="text-xl font-bold mb-4">Booking {selectedMountain.name}</h2>
-
-      {["name", "email", "phone", "date", "people"].map((f) => (
-        <input
-          key={f}
-          type={f === "date" ? "date" : f === "people" ? "number" : "text"}
-          name={f}
-          placeholder={f}
-          value={bookingData[f]}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-3"
-        />
-      ))}
-
-      <button
-        onClick={handleBooking}
-        className="w-full bg-green-600 text-white py-3 rounded font-bold"
-      >
-        Bayar Sekarang
-      </button>
-    </div>
-  );
-
-  /* ================= RIWAYAT ================= */
-  const Bookings = () => (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Riwayat Booking</h1>
-
-      {bookings.map((b) => (
-        <div key={b.id} className="bg-white p-6 rounded-xl shadow mb-4">
-          <h2 className="font-bold">{b.mountain}</h2>
-          <p>Nama: {b.name}</p>
-          <p>Total: Rp {b.total.toLocaleString("id-ID")}</p>
-
-          {b.status === "MENUNGGU_PEMBAYARAN" ? (
-            <>
-              <p className="mt-2 text-sm">
-                Virtual Account: <strong>{b.va}</strong>
-              </p>
-              <button
-                onClick={() => confirmPayment(b.id)}
-                className="mt-3 bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Saya Sudah Bayar
-              </button>
-            </>
-          ) : (
-            <div className="mt-4 bg-green-50 p-4 rounded-lg flex items-center gap-3">
-              <CheckCircle className="text-green-600" />
-              <div>
-                <p className="font-bold text-green-700">Pembayaran Lunas</p>
-                <p className="text-sm text-gray-600">Terima kasih, selamat mendaki! 🏔️</p>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {page === "home" && <Home />}
-      {page === "detail" && <Detail />}
-      {page === "bookings" && <Bookings />}
+    <div className="font-sans">
+
+      {/* ===== NAVBAR ===== */}
+      <header className="fixed top-0 w-full bg-white shadow z-50">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() =>
+              document
+                .getElementById("home")
+                .scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            <Mountain className="text-green-600" />
+            <span className="font-bold text-xl">
+              BookingGunung.id
+            </span>
+          </div>
+
+          <nav className="flex gap-6 font-medium">
+            {["home", "mountains", "contact"].map((m) => (
+              <button
+                key={m}
+                onClick={() =>
+                  document
+                    .getElementById(m)
+                    .scrollIntoView({ behavior: "smooth" })
+                }
+                className={`${
+                  activeMenu === m
+                    ? "text-green-600"
+                    : "text-gray-600"
+                } hover:text-green-600`}
+              >
+                {m === "home"
+                  ? "Beranda"
+                  : m === "mountains"
+                  ? "Menu Gunung"
+                  : "Kontak"}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      {/* ===== HERO ===== */}
+      <section
+        id="home"
+        className="h-[500px] pt-24 flex items-center justify-center text-white"
+        style={{
+          backgroundImage: "url('/ack.jpg')",
+          backgroundSize: "cover",
+        }}
+      >
+        <div
+          className="bg-black/50 p-10 rounded-xl text-center"
+          style={{
+            backgroundImage: "url('/mountains.jpg')",
+            backgroundSize: "cover",
+          }}
+        >
+          <h1 className="text-4xl font-bold mb-4">
+            Jelajahi Puncak Indonesia
+          </h1>
+          <p>
+            Booking tiket pendakian gunung favoritmu
+            dengan mudah dan aman
+          </p>
+        </div>
+      </section>
+
+      {/* ===== LIST GUNUNG ===== */}
+      <section id="mountains" className="py-16">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
+          {mountainsData.map((m) => (
+            <div
+              key={m.id}
+              className="bg-white rounded-xl shadow hover:shadow-lg transition"
+            >
+              <img
+                src={m.image}
+                alt={m.name}
+                className="h-48 w-full object-cover rounded-t-xl"
+              />
+              <div className="p-5">
+                <h3 className="font-bold text-lg">
+                  {m.name}
+                </h3>
+                <p className="text-gray-500 text-sm flex items-center gap-1">
+                  <MapPin size={14} /> {m.location}
+                </p>
+                <p className="mt-2 font-semibold">
+                  Rp {m.price.toLocaleString()}
+                </p>
+                <button
+                  onClick={() => setSelectedMountain(m)}
+                  className="mt-4 w-full bg-green-600 text-white py-2 rounded"
+                >
+                  Booking
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== BOOKING FORM ===== */}
+      {selectedMountain && (
+        <section className="bg-gray-100 py-12">
+          <div className="max-w-xl mx-auto bg-white p-6 rounded-xl">
+            <h2 className="font-bold text-xl mb-4">
+              Booking {selectedMountain.name}
+            </h2>
+
+            <input
+              placeholder="Nama"
+              className="input"
+              value={bookingData.name}
+              onChange={(e) =>
+                setBookingData({
+                  ...bookingData,
+                  name: e.target.value,
+                })
+              }
+            />
+            <input
+              placeholder="Email"
+              className="input"
+              value={bookingData.email}
+              onChange={(e) =>
+                setBookingData({
+                  ...bookingData,
+                  email: e.target.value,
+                })
+              }
+            />
+            <input
+              placeholder="No HP"
+              className="input"
+              value={bookingData.phone}
+              onChange={(e) =>
+                setBookingData({
+                  ...bookingData,
+                  phone: e.target.value,
+                })
+              }
+            />
+            <input
+              type="date"
+              className="input"
+              value={bookingData.date}
+              onChange={(e) =>
+                setBookingData({
+                  ...bookingData,
+                  date: e.target.value,
+                })
+              }
+            />
+            <button
+              onClick={handleBooking}
+              className="mt-4 bg-blue-600 text-white w-full py-2 rounded"
+            >
+              Bayar
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* ===== RIWAYAT ===== */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="font-bold text-2xl mb-6">
+          Riwayat Booking
+        </h2>
+        {bookings.map((b) => (
+          <div
+            key={b.id}
+            className="border p-4 rounded mb-4"
+          >
+            <p>
+              <strong>{b.mountain}</strong> – Rp{" "}
+              {b.total.toLocaleString()}
+            </p>
+            {b.status === "MENUNGGU_PEMBAYARAN" ? (
+              <>
+                <p>VA: {b.va}</p>
+                <button
+                  className="mt-2 bg-green-600 text-white px-4 py-1 rounded"
+                  onClick={() =>
+                    setBookings(
+                      bookings.map((x) =>
+                        x.id === b.id
+                          ? { ...x, status: "LUNAS" }
+                          : x
+                      )
+                    )
+                  }
+                >
+                  Saya Sudah Bayar
+                </button>
+              </>
+            ) : (
+              <p className="text-green-600 flex items-center gap-1">
+                <CheckCircle size={16} /> LUNAS
+              </p>
+            )}
+          </div>
+        ))}
+      </section>
+
+      {/* ===== FOOTER ===== */}
+      <footer
+        id="contact"
+        className="bg-gray-800 text-white py-10"
+      >
+        <div className="text-center space-y-4">
+          <p>support@bookinggunung.id</p>
+          <div className="flex justify-center gap-6">
+            <Facebook />
+            <Instagram />
+            <Twitter />
+          </div>
+          <p className="text-sm text-gray-400">
+            © 2024 BookingGunung.id
+          </p>
+        </div>
+      </footer>
     </div>
   );
-};
-
-export default App;
+}
